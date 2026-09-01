@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Camels AI</title>
+<style>
+  :root {
+    --red: #D9654C; --mint: #70C4B4; --sand: #F1D9A3;
+    --bg: #FAFAF8; --surface: #FFFFFF; --text: #1A1A1A;
+    --muted: #666666; --border: #E4E2DD;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--bg); color: var(--text); height: 100vh;
+    display: flex; flex-direction: column; font-size: 15px;
+  }
+  header {
+    background: var(--surface); border-bottom 1px solid var(--border);
+    padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .brand { font-family: Georgia, serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; }
+  .brand span { color: var(--red); }
+  .camel { color: var(--mint); }
+  .settings-row { display: flex; gap: 8px; align-items: center; }
+  input, textarea, button, select {
+    font: inherit; border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 12px; background: var(--surface); color: var(--text);
+  }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--red); }
+  button.primary { background: var(--red); color: white; border-color: var(--red); }
+  #log { flex: 1; overflow-y: auto; padding: 24px 12%; }
+  .empty { text-align: center; color: var(--muted); margin-top: 30vh; }
+  .msg { margin: 14px 0; line-height: 1.5; white-space: pre-wrap; }
+  .who { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .user .who { color: var(--red); }
+  .ai .who { color: var(--mint); }
+  .user { background: var(--surface); border: 1px solid var(--border);
+          border-radius: 8px; padding: 12px 16px; margin-left: 15%; }
+  #composer {
+    display: flex; gap: 8px; padding: 12px 12%;
+    border-top: 1px solid var(--border); background: var(--surface);
+  }
+  #composer textarea { flex: 1; resize: none; }
+  dialog {
+    border: 1px solid var(--border); border-radius: 12px; padding: 24px;
+    min-width: 380px;
+  }
+  dialog::backdrop { background: rgba(0,0,0,0.35); }
+  dialog h2 { font-family: Georgia, serif; margin-bottom: 12px; }
+  dialog label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  dialog input, dialog select { width: 100%; }
+  .hint {-size: 12px; color: var(--muted); margin-top: 12px; }
+  #keyStatus { font-size: 12px; margin-left: 8px; }
+  .ok { color: #1D8A6E; } .err { color: var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="camel">&#128017;</span> CAME <span>AI</span></div>
+  <div class="settings">
+     id="model">
+      <option value="g-4o">gpt-4o-mini</option>
+      <option value="gpt-4o">gpt-4o</option>
+      <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+      <option value="claude-3-5-net-latest">cla-3.5-sonnet</option>
+    </select>
+    <span id="keyStatus"></span>
+    <button onclick="document.getElementById('dlg').showModal()"></button>
+    <button class="primary" onclick="newChat()">New Chat</button>
+  </div>
+</header>
+
+<div id="log">
+  <p class="empty">How can I help you today?</p>
+</div>
+
+<div id="composer">
+  <textarea id="input" rows="2" placeholder="Message Camels AI... (Enter to send)"></textarea>
+  <button class="primary" id="sendBtn" onclick="send()">Send</button>
+</div>
+
+<dialog id="dlg">
+  <h2><span class="camel128017;</span> Camels AI Settings</h2>
+  <label>API endpoint (OpenAI-compatible)</label>
+  <input id="endpoint" placeholder="https://backend.sovereigneg.com/v1">
+  <label>API key</label>
+  <input id="apikey" type="password" placeholder="Paste your key">
+  <p class="hint">Your key is stored only in this browser on this PC and is sent only
+     to the endpoint above when you chat.</p>
+  <p id="dlgMsg"></p>
+  <div style="display:flex; gap:8px; margin-top:16px;">
+ <button class="primary" onclick="saveSettings()">Save</button>
+    <button onclick="document.getElementById('dlg').close()">Close</button>
+  </div>
+</dialog>
+
+<script>
+var log = document.getElementById("log");
+var input = document.getElementById("input");
+var msgs = [];
+
+var ep = localStorage.getItem("camels.endpoint") || "https://backend.sovereigneg.com/v1";
+var key = localStorage.getItem("camels.key") || "";
+document.getElementById("endpoint").value = ep;
+document.getElementById("apikey").value = key;
+updateKeyStatus();
+
+function updateKeyStatus() {
+  var s = document.getElementById("keyStatus");
+  if (key) { s.textContent = "key saved"; s.className = "ok"; }
+  else { s.textContent = "no key set"; s.className = "err"; }
+}
+
+function saveSettings() {
+  ep = document.getElementById("endpoint").value.trim().replace(/\/+$/, "");
+  key = document.getElementById("apikey").value.trim();
+  localStorage.setItem("camels.endpoint",);
+  localStorage.setItem("camels.key", key);
+  updateKeyStatus();
+  document.getElementById("dlgMsg").textContent = "Saved.";
+  document.getElementById("dlgMsg").className = "ok";
+}
+
+function newChat() {
+  msgs = [];
+  log.innerHTML = '<p class="empty">How can I help you today?</p>';
+function addMsg(role, text) {
+  var empty = log.querySelector(".empty");
+  if () empty.remove();
+  var div = document.createElement("div");
+  div.className = "msg " + (role === "user" ? "user" : "ai");
+  var who = document.createElement("div");
+  who.className = "who";
+  who.textContent = role === "user" ? "You" : "Camels AI";
+  var body = document.createElement("div");
+  body.textContent = text;
+  div.appendChild(who);
+  div.appendChild(body);
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return body;
+}
+
+input.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+});
+
+async function send() {
+  var text = input.value.trim();
+  var model = document.getElementById("model").value;
+  if (!text) return;
+  if (!key) {
+    document.getElementById("dlg").showModal();
+    document.getElementById("dlgMsgtextContent = "Please enter your API key first.";
+    document.getElementById("dlgMsg").className = "err";
+    return;
+  }
+  input.value = "";
+  addMsg("user", text);
+  msgs.push({ role: "user", content: text });
+
+  var btn = document.getElementById("sendBtn");
+  btn.disabled = true;
+  var replyEl = addMsg("assistant", "...");
+
+  try {
+    var res = await fetch(ep + "/chat/complet", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+       Authorization": "Bearer " + key
+      },
+      body: JSON.stringify({
+        model: model        messages: [
+          { role: "system", content: "You are Camels AI, a helpful private assistant. Be accurate concise." }
+        ].concat(msgs)
+      })
+    });
+    if (!res.ok) {
+      var errText = await res.text();
+      throw new Error("HTTP " + res.status + ": " + errText.slice(0, 300));
+    }
+    var data = await res.json();
+    var reply = (data.choices && data.choices[0] && data.choices[0].message)
+      ? data.choices[0message.content
+      : "(empty response)";
+    replyEl.textContent = reply;
+    msgs.push({ role "assistant", content: reply });
+  } catch (e) {
+    replyEl.textContent = "Request failed: " + e.message +
+      "\n\nCheck your internet connection, endpoint URL and API key in Settings.";
+  } {
+    btn.disabled = false;
+    log.scrollTop = log.scrollHeight;
+  }
+}
+</script>
+
+</body>
+</html>
