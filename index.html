@@ -5,7 +5,7 @@
 <title>Camels AI</title>
 <style>
   :root {
-    --red: #D9654C; --mint: #70C4B4; --sand: #F1D9A3;
+    --red: #D9654C; --mint: #70C4B4;
     --bg: #FAFAF8; --surface: #FFFFFF; --text: #1A1A1A;
     --muted: #666666; --border: #E4E2DD;
   }
@@ -16,13 +16,11 @@
     display: flex; flex-direction: column; font-size: 15px;
   }
   header {
-    background: var(--surface); border-bottom 1px solid var(--border);
+    background: var(--surface); border-bottom: 1px solid var(--border);
     padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
   }
   .brand { font-family: Georgia, serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; }
   .brand span { color: var(--red); }
-  .camel { color: var(--mint); }
-  .settings-row { display: flex; gap: 8px; align-items: center; }
   input, textarea, button, select {
     font: inherit; border: 1px solid var(--border); border-radius: 8px;
     padding: 8px 12px; background: var(--surface); color: var(--text);
@@ -44,14 +42,13 @@
   }
   #composer textarea { flex: 1; resize: none; }
   dialog {
-    border: 1px solid var(--border); border-radius: 12px; padding: 24px;
-    min-width: 380px;
+    border: 1px solid var(--border); border-radius: 12px; padding: 24px; min-width: 380px;
   }
   dialog::backdrop { background: rgba(0,0,0,0.35); }
   dialog h2 { font-family: Georgia, serif; margin-bottom: 12px; }
   dialog label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
   dialog input, dialog select { width: 100%; }
-  .hint {-size: 12px; color: var(--muted); margin-top: 12px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 12px; }
   #keyStatus { font-size: 12px; margin-left: 8px; }
   .ok { color: #1D8A6E; } .err { color: var(--red); }
 </style>
@@ -59,16 +56,16 @@
 <body>
 
 <header>
-  <div class="brand"><span class="camel">&#128017;</span> CAME <span>AI</span></div>
-  <div class="settings">
-     id="model">
-      <option value="g-4o">gpt-4o-mini</option>
+  <div class="brand">CAMELS <span>AI</span></div>
+  <div class="settings-row">
+    <select id="model">
+      <option value="gpt-4o-mini">gpt-4o-mini</option>
       <option value="gpt-4o">gpt-4o</option>
       <option value="gpt-4.1-mini">gpt-4.1-mini</option>
-      <option value="claude-3-5-net-latest">cla-3.5-sonnet</option>
+      <option value="claude-3-5-sonnet-latest">claude-3.5-sonnet</option>
     </select>
     <span id="keyStatus"></span>
-    <button onclick="document.getElementById('dlg').showModal()"></button>
+    <button onclick="openSettings()">Settings</button>
     <button class="primary" onclick="newChat()">New Chat</button>
   </div>
 </header>
@@ -83,7 +80,7 @@
 </div>
 
 <dialog id="dlg">
-  <h2><span class="camel128017;</span> Camels AI Settings</h2>
+  <h2>Camels AI Settings</h2>
   <label>API endpoint (OpenAI-compatible)</label>
   <input id="endpoint" placeholder="https://backend.sovereigneg.com/v1">
   <label>API key</label>
@@ -92,7 +89,7 @@
      to the endpoint above when you chat.</p>
   <p id="dlgMsg"></p>
   <div style="display:flex; gap:8px; margin-top:16px;">
- <button class="primary" onclick="saveSettings()">Save</button>
+    <button class="primary" onclick="saveSettings()">Save</button>
     <button onclick="document.getElementById('dlg').close()">Close</button>
   </div>
 </dialog>
@@ -108,6 +105,10 @@ document.getElementById("endpoint").value = ep;
 document.getElementById("apikey").value = key;
 updateKeyStatus();
 
+function openSettings() {
+  document.getElementById("dlg").showModal();
+}
+
 function updateKeyStatus() {
   var s = document.getElementById("keyStatus");
   if (key) { s.textContent = "key saved"; s.className = "ok"; }
@@ -117,24 +118,27 @@ function updateKeyStatus() {
 function saveSettings() {
   ep = document.getElementById("endpoint").value.trim().replace(/\/+$/, "");
   key = document.getElementById("apikey").value.trim();
-  localStorage.setItem("camels.endpoint",);
+  localStorage.setItem("camels.endpoint", ep);
   localStorage.setItem("camels.key", key);
   updateKeyStatus();
-  document.getElementById("dlgMsg").textContent = "Saved.";
-  document.getElementById("dlgMsg").className = "ok";
+  var m = document.getElementById("dlgMsg");
+  m.textContent = "Saved.";
+  m.className = "ok";
 }
 
 function newChat() {
   msgs = [];
   log.innerHTML = '<p class="empty">How can I help you today?</p>';
+}
+
 function addMsg(role, text) {
   var empty = log.querySelector(".empty");
-  if () empty.remove();
+  if (empty) empty.remove();
   var div = document.createElement("div");
   div.className = "msg " + (role === "user" ? "user" : "ai");
   var who = document.createElement("div");
   who.className = "who";
-  who.textContent = role === "user" ? "You" : "Camels AI";
+  who.textContent = (role === "user") ? "You" : "Camels AI";
   var body = document.createElement("div");
   body.textContent = text;
   div.appendChild(who);
@@ -153,9 +157,10 @@ async function send() {
   var model = document.getElementById("model").value;
   if (!text) return;
   if (!key) {
-    document.getElementById("dlg").showModal();
-    document.getElementById("dlgMsgtextContent = "Please enter your API key first.";
-    document.getElementById("dlgMsg").className = "err";
+    openSettings();
+    var m = document.getElementById("dlgMsg");
+    m.textContent = "Please enter your API key first.";
+    m.className = "err";
     return;
   }
   input.value = "";
@@ -167,15 +172,16 @@ async function send() {
   var replyEl = addMsg("assistant", "...");
 
   try {
-    var res = await fetch(ep + "/chat/complet", {
+    var res = await fetch(ep + "/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-       Authorization": "Bearer " + key
+        "Authorization": "Bearer " + key
       },
       body: JSON.stringify({
-        model: model        messages: [
-          { role: "system", content: "You are Camels AI, a helpful private assistant. Be accurate concise." }
+        model: model,
+        messages: [
+          { role: "system", content: "You are Camels AI, a helpful private assistant. Be accurate and concise." }
         ].concat(msgs)
       })
     });
@@ -185,14 +191,14 @@ async function send() {
     }
     var data = await res.json();
     var reply = (data.choices && data.choices[0] && data.choices[0].message)
-      ? data.choices[0message.content
+      ? data.choices[0].message.content
       : "(empty response)";
     replyEl.textContent = reply;
-    msgs.push({ role "assistant", content: reply });
+    msgs.push({ role: "assistant", content: reply });
   } catch (e) {
     replyEl.textContent = "Request failed: " + e.message +
       "\n\nCheck your internet connection, endpoint URL and API key in Settings.";
-  } {
+  } finally {
     btn.disabled = false;
     log.scrollTop = log.scrollHeight;
   }
